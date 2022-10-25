@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Skrzeszewski Pingiel</title>
+    <script src="/socket.io.js"></script>
+    <script src="/jquery.min.js"></script>
+    <link rel="stylesheet" href="/bootstrap.min.css" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+<body>
+
+    <div class="container">
+        <div class="row">
+            <h1 style="text-align: center">Skrzeszewski Pingiel</h1>
+        </div>
+        <div class="row">
+
+            <!--<div class="col-md-12 ">-->
+            <!--<p style="text-align: center"><button id='btn_click' class="bnt btn-lg btn-success">Click Me!</button></p>
+
+        <p style="text-align: center">Click counts:<span id="counter"></span></p>-->
+            <div class="col text-center"><h1 id="counter1">0</h1></div>
+            <div class="col text-center"><h1>Game points</h1></div>
+            <div class="col text-center"><h1 id="counter2">0</h1></div>
+        </div>
+        <div class="row">
+            <div class="col text-center"><h1 id="matchCounter1">0</h1></div>
+            <div class="col text-center"><h1>Match points</h1></div>
+            <div class="col text-center"><h1 id="matchCounter2">0</h1></div>
+        </div>
+        <div class="row">
+            <div class="col text-center"><img id="serve1" src="/rocket.png" /></div>
+            <div class="col text-center"><button id='btn_click' class="bnt btn-lg btn-success">Reset</button></div>
+            <div class="col text-center"><img id="serve2"src="/rocket.png" /></div>
+        </div>
+        <!-- </div>-->
+    </div>
+
+
+    <script>
+    $(function () {
+
+        var socket = io();//connect to the socket
+
+        socket.on('connect',function()
+        {
+           console.log('Yeah I am connected!!');
+        });
+
+        //Listen from server.js
+        socket.on('click_count',function(value)
+        {
+            $('#counter').html(value);//Set new count value
+        });
+
+        socket.on('p1_count', function (value) {
+            $('#counter1').html(value);//Set new count value
+        });
+        socket.on('p2_count', function (value) {
+            $('#counter2').html(value);//Set new count value
+        });
+
+        socket.on('p1_match', function (value) {
+            $('#matchCounter1').html(value);//Set new count value
+        });
+
+        socket.on('p2_match', function (value) {
+            $('#matchCounter2').html(value);//Set new count value
+        });
+
+        socket.on('serve', function (value) {
+            if (value.p == 1) {
+                if (value.s == 1) {
+                    $('#serve1').attr('src', '1r.png');
+                } else {
+                    $('#serve1').attr('src', '2r.png');
+                }
+                $('#serve1').show();
+                $('#serve2').hide();
+            }
+            else {
+                if (value.s == 1) {
+                    $('#serve2').attr('src', '1r.png');
+                } else {
+                    $('#serve2').attr('src', '2r.png');
+                }
+                $('#serve2').show();
+                $('#serve1').hide();
+            }
+
+        });
+
+        //Says to server that the button has been clicked
+        $('#btn_click').click(function()
+        {
+            socket.emit('clicked');//Emitting user click
+        });
+
+    });
+    </script>
+</body>
+</html>
