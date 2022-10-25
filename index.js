@@ -30,18 +30,48 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/remove', function (req, res) {
+
+    score('remove', req.query.p);
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end();
+});
 app.get('/add', function (req, res) {
+
+    score('add', req.query.p);
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end();
+});
+
+function score(action, player) {
 
     //audioplayer.play(__dirname + '/ding.mp3', function (err) {
     
     var matchPoint = false;
-    var player = req.query.p;
-    if (player == 1) {
-        counter1 += 1;
+    if (action == 'add') {
+        if (player == 1) {
+            counter1 += 1;
 
+        } else {
+            counter2 += 1;
+
+        }
     } else {
-        counter2 += 1;
+        if (player == 1) {
+            counter1 -= 1;
 
+        } else {
+            counter2 -= 1;
+
+        }
+        if (serve == 1)
+            serve1 += 1;
+        else
+            serve2 += 1;
+        server.emit('serve', { p: serve, s: serve1 + serve2 });
+        server.emit('p1_count', counter1);
+        server.emit('p2_count', counter2);
+        return;
     }
 
     if (serve == 1) {
@@ -100,10 +130,9 @@ app.get('/add', function (req, res) {
     
 
 
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end();
 
-});
+
+}
 
 server.on('connection', function (socket) {
     
@@ -112,6 +141,8 @@ server.on('connection', function (socket) {
     //socket.emit('click_count', counter);
     socket.emit('p1_count', counter1);
     socket.emit('p2_count', counter2);
+    server.emit('p1_match', matchCounter1);
+    server.emit('p2_match', matchCounter2);
     server.emit('serve', { p: serve, s: serve1 + serve2 });
     //when user click the button
     socket.on('clicked', function () {
