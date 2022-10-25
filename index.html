@@ -2,13 +2,18 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <meta name=”apple-mobile-web-app-capable” content=”yes “>
+
     <title>Skrzeszewski Pingiel</title>
     <script src="/socket.io.js"></script>
     <script src="/jquery.min.js"></script>
+    <script src="/jquery-ui.min.js"></script>
+    <script src="/knockout-2.2.1.js"></script>
+    <script src="/sevenSeg.js"></script>
+
+
     <link rel="stylesheet" href="/bootstrap.min.css" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
 </head>
-<body>
+<body class="bg-black">
 
     <div class="container">
         <div class="row">
@@ -20,19 +25,19 @@
             <!--<p style="text-align: center"><button id='btn_click' class="bnt btn-lg btn-success">Click Me!</button></p>
 
         <p style="text-align: center">Click counts:<span id="counter"></span></p>-->
-            <div class="col text-center"><h1 id="counter1">0</h1></div>
+            <div class="col text-center"><div id="counter1"></div></div>
             <div class="col text-center"><h1>Game points</h1></div>
-            <div class="col text-center"><h1 id="counter2">0</h1></div>
+            <div class="col text-center"><div id="counter2"></div></div>
         </div>
         <div class="row">
-            <div class="col text-center"><h1 id="matchCounter1">0</h1></div>
-            <div class="col text-center"><h1>Match points</h1></div>
-            <div class="col text-center"><h1 id="matchCounter2">0</h1></div>
+            <div class="col"><div style="height:150px; margin-top: 50px" id="matchCounter1"></div></div>
+            <div class="col "><h1 style="padding-left:100px;">Match points</h1></div>
+            <div class="col"><div style="height: 150px; margin-top: 50px" id="matchCounter2"></div></div>
         </div>
-        <div class="row">
-            <div class="col text-center"><img id="serve1" src="/rocket.png" /></div>
-            <div class="col text-center"><button id='btn_click' class="bnt btn-lg btn-success">Reset</button></div>
-            <div class="col text-center"><img id="serve2"src="/rocket.png" /></div>
+        <div class="row" style="padding-top: 50px">
+            <div class="col-sm text-center"><img id="serve1" src="/1r.png" /></div>
+            <div class="col text-center"><button id='btn_click' class="btn btn-primary">Reset</button></div>
+            <div class="col-sm text-center"><img id="serve2"src="/1r.png" /></div>
         </div>
         <!-- </div>-->
     </div>
@@ -55,18 +60,28 @@
         });
 
         socket.on('p1_count', function (value) {
-            $('#counter1').html(value);//Set new count value
+            $('#counter1').sevenSegArray({ digits: 2, value: value });//html(value);//Set new count value
+            $('.container').effect("highlight", {}, 200);
         });
         socket.on('p2_count', function (value) {
-            $('#counter2').html(value);//Set new count value
+            $('#counter2').sevenSegArray({ digits: 2, value: value });//html(value);//Set new count value
+            $('.container').effect("highlight", {}, 200);
         });
 
         socket.on('p1_match', function (value) {
-            $('#matchCounter1').html(value);//Set new count value
+            $('#matchCounter1').sevenSegArray({
+                digits: 1, value: value, segmentOptions: {
+                    colorOff: "#003200",
+                    colorOn: "Lime"
+                } });//html(value);//Set new count value
         });
 
         socket.on('p2_match', function (value) {
-            $('#matchCounter2').html(value);//Set new count value
+            $('#matchCounter2').sevenSegArray({
+                digits: 1, value: value, segmentOptions: {
+                    colorOff: "#003200",
+                    colorOn: "Lime"
+                } });// html(value);//Set new count value
         });
 
         socket.on('serve', function (value) {
