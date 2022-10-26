@@ -60,11 +60,20 @@
         });
 
         socket.on('p1_count', function (value) {
-            $('#counter1').sevenSegArray({ digits: 2, value: value });//html(value);//Set new count value
+            $('#counter1').sevenSegArray({
+                digits: 2, value: value, segmentOptions: {
+                    colorOff: "#121010",
+                    colorOn: "Red"
+                } });//html(value);//Set new count value
             $('.container').effect("highlight", {}, 200);
         });
         socket.on('p2_count', function (value) {
-            $('#counter2').sevenSegArray({ digits: 2, value: value });//html(value);//Set new count value
+            $('#counter2').sevenSegArray({
+                digits: 2, value: value, segmentOptions: {
+                    colorOff: "#121010",
+                    colorOn: "Red"
+                }
+});//html(value);//Set new count value
             $('.container').effect("highlight", {}, 200);
         });
 
