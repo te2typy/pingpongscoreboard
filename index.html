@@ -44,10 +44,13 @@
 
 
     <script>
+        const soundEffect = new Audio();
+        soundEffect.autoplay = true;
+        var servechange = 0;;
     $(function () {
 
         var socket = io();//connect to the socket
-
+        
         socket.on('connect',function()
         {
            console.log('Yeah I am connected!!');
@@ -60,6 +63,7 @@
         });
 
         socket.on('p1_count', function (value) {
+            pointsound();
             $('#counter1').sevenSegArray({
                 digits: 2, value: value, segmentOptions: {
                     colorOff: "#121010",
@@ -68,6 +72,7 @@
             $('.container').effect("highlight", {}, 200);
         });
         socket.on('p2_count', function (value) {
+            pointsound();
             $('#counter2').sevenSegArray({
                 digits: 2, value: value, segmentOptions: {
                     colorOff: "#121010",
@@ -78,6 +83,7 @@
         });
 
         socket.on('p1_match', function (value) {
+            matchpointsound();
             $('#matchCounter1').sevenSegArray({
                 digits: 1, value: value, segmentOptions: {
                     colorOff: "#003200",
@@ -86,6 +92,7 @@
         });
 
         socket.on('p2_match', function (value) {
+            matchpointsound();
             $('#matchCounter2').sevenSegArray({
                 digits: 1, value: value, segmentOptions: {
                     colorOff: "#003200",
@@ -115,6 +122,13 @@
 
         });
 
+        socket.on('p1_turn', function (value) {
+            servechange = 2;
+        });
+        socket.on('p2_turn', function (value) {
+            servechange = 2;
+        });
+
         //Says to server that the button has been clicked
         $('#btn_click').click(function()
         {
@@ -122,6 +136,45 @@
         });
 
     });
+        function playsound(sound) {
+            sound.play();
+            //var playPromise = sound.play();
+            //if (playPromise !== undefined) {
+            //    playPromise.then(_ => {
+            //        // Automatic playback started!
+            //        // Show playing UI.
+            //    })
+            //        .catch(error => {
+            //            // Auto-play was prevented
+            //            // Show paused UI.
+            //        });
+            //}
+        }
+        function pointsound() {
+
+            if (servechange > 0) {
+                soundservechange();
+                servechange -= 1;
+            } else {
+                soundEffect.src = "data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+
+                //// later on when you actually want to play a sound at any point without user interaction
+                soundEffect.src = '/sounds/point.mp3';
+                //soundEffect.play();
+                playsound(soundEffect);
+            }
+            
+        }
+        function matchpointsound() {
+            soundEffect.src = '/sounds/setwin.mp3';
+            //soundEffect.play();
+            playsound(soundEffect);
+        }
+        function soundservechange() {
+            soundEffect.src = '/sounds/serve.mp3';
+            //soundEffect.play();
+            playsound(soundEffect);
+        }
     </script>
 </body>
 </html>

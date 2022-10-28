@@ -12,7 +12,9 @@ class GameStateContainer {
         this.current = g;
         this.gamestates.push(new GameState(this.current.counter1, this.current.counter2, this.current.matchCounter1, this.current.matchCounter2, this.current.serve1, this.current.serve2, this.current.server, this.current.whoStarted, this.current.switchUsers, this.isMatchPoint));
     }
-
+    Copy(g) {
+        return new GameState(g.counter1, g.counter2, g.matchCounter1, g.matchCounter2, g.serve1, g.serve2, g.server, g.whoStarted, g.switchUsers, g.isMatchPoint);
+    }
 }
 class GameState {
     constructor(counter1, counter2, matchCounter1, matchCounter2, serve1, serve2, server, whoStarted, switchUsers, isMatchPoint) {
@@ -32,7 +34,7 @@ class GameState {
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var beep = require('beepbeep');
+
 var server = require('socket.io')(http, {
     cors: {
         origin: "http://localhost:8100",
@@ -72,7 +74,7 @@ app.get('/', function (req, res) {
 app.get('/back', function (req, res) {
 
     gameStateContainer.gamestates.pop();
-    emitAll(gameStateContainer.gamestates[gameStateContainer.gamestates.length-1]);
+    emitAll(gameStateContainer.Copy(gameStateContainer.gamestates[gameStateContainer.gamestates.length - 1]));
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end();
 });
@@ -84,16 +86,42 @@ app.get('/add', function (req, res) {
 });
 
 function score(action, player) {
-    beep();
+
+    if (gameState.isMatchPoint) {
+        if (gameState.counter1 > gameState.counter2) {
+            gameState.matchCounter1 += 1;
+        }
+        else {
+            gameState.matchCounter2 += 1;
+        }
+        gameState.counter1 = gameState.counter2 = 0;
+
+        gameState.switchUsers = !gameState.switchUsers;
+        if (gameState.whoStarted == 1) {
+            gameState.whoStarted = 2;
+            gameState.serve = 2;
+            gameState.serve2 = 2;
+        } else {
+            gameState.whoStarted = 1;
+            gameState.serve = 1;
+            gameState.serve1 = 2;
+        }
+        gameState.isMatchPoint = false;
+        gameStateContainer.Add(gameState);
+        emitAll(gameState);
+        return;
+
+    }
     if (gameState.switchUsers) {
         if (player == 1)
             player = 2;
         else
             player = 1;
     }
+
     //audioplayer.play(__dirname + '/ding.mp3', function (err) {
-    
-    gameState.isMatchPointmatchPoint = false;
+
+    gameState.isMatchPoint = false;
 
         if (player == 1) {
             gameState.counter1 += 1;
@@ -109,6 +137,9 @@ function score(action, player) {
         if (gameState.serve1 == 0) {
             gameState.serve = 2;
             gameState.serve2 = howManyServes(gameState.counter1, gameState.counter2);
+            if (gameState.serve2 > 1) {
+                server.emit('p2_turn', gameState.serve2);
+            }
             gameState.serve1 = 0;
         }
     } else {
@@ -116,6 +147,8 @@ function score(action, player) {
         if (gameState.serve2 == 0) {
             gameState.serve = 1;
             gameState.serve1 = howManyServes(gameState.counter1, gameState.counter2);
+            if (gameState.serve1 > 1)
+                server.emit('p1_turn', gameState.serve1);
             gameState.serve2 = 0;
         }
 
@@ -126,37 +159,34 @@ function score(action, player) {
 
     if (gameState.counter1 > gameState.counter2) {
         if (gameState.counter1 >= 11 && gameState.counter1 - gameState.counter2 >= 2) {
-            gameState.matchCounter1 += 1;
-            gameState.counter1 = 0;
-            gameState.counter2 = 0;
-            gameState.isMatchPointmatchPoint = true;
-            
+            gameState.isMatchPoint = true;
         }
     } else if (gameState.counter2 >= 11 && gameState.counter2 - gameState.counter1 >=2) {
-        gameState.matchCounter2 += 1;
-        gameState.counter1 = 0;
-        gameState.counter2 = 0;
-        gameState.isMatchPointmatchPoint = true;
+        gameState.isMatchPoint = true;
     }
 
-    if (gameState.isMatchPointmatchPoint) {
-        beep(3,1000);
-        gameState.switchUsers = !gameState.switchUsers;
-        if (gameState.whoStarted == 1) {
-            gameState.whoStarted = 2;
-            gameState.serve = 2;
-            gameState.serve2 = 2;
-        } else {
-            gameState.whoStarted = 1;
-            gameState.serve = 1;
-            gameState.serve1 = 2;
-        }
-        //server.emit('serve', { p: gameState.serve, s: gameState.serve1 + gameState.serve2 });
-    }
+    
 
     gameStateContainer.Add(gameState);
-    emitAll(gameState);
+    if (gameState.isMatchPoint) {
+        //beep(3,1000);
 
+        //server.emit('serve', { p: gameState.serve, s: gameState.serve1 + gameState.serve2 });
+        emitAll(gameState);
+    } else {
+        emitWithoutMatchPoint(gameState);
+    }
+    
+
+}
+function emitMatchPoint(gamestate) {
+    server.emit('p1_match', gamestate.matchCounter1);
+    server.emit('p2_match', gamestate.matchCounter2);
+}
+function emitWithoutMatchPoint(gamestate) {
+    server.emit('p1_count', gamestate.counter1);
+    server.emit('p2_count', gamestate.counter2);
+    server.emit('serve', { p: gamestate.serve, s: gamestate.serve1 + gamestate.serve2 });
 }
 function emitAll(gamestate) {
     server.emit('p1_count', gamestate.counter1);
@@ -187,11 +217,12 @@ server.on('connection', function (socket) {
          gameState.serve2 = 0;
          gameState.serve = 1;
         gameState.whoStarted = 1;
-        server.emit('p1_count', gameState.counter1);
-        server.emit('p2_count', gameState.counter2);
-        server.emit('p1_match', gameState.matchCounter1);
-        server.emit('p2_match', gameState.matchCounter2);
-        server.emit('serve', { p: gameState.serve, s: gameState.serve1 + serve2 });
+        gameState.switchUsers = false;
+        gameState.isMatchPoint = false;
+        gameStateContainer = new GameStateContainer();
+        gameStateContainer.Add(gameState);
+        emitAll(gameState);
+
 
         //server.emit('click_count', counter);//send to all users new counter value
     });
